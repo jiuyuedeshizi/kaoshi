@@ -1,0 +1,166 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CANDIDATE
+  ADMIN
+  REVIEWER
+}
+
+enum ApplicationStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  PAID
+  TICKET_READY
+  FINISHED
+}
+
+enum PaymentProvider {
+  MOCK
+  WECHAT
+  ALIPAY
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  CLOSED
+}
+
+model User {
+  id               String     @id @default(cuid())
+  role             UserRole   @default(CANDIDATE)
+  name             String
+  phone            String     @unique
+  idCard           String     @unique
+  passwordHash     String
+  gender           String?
+  email            String?
+  address          String?
+  emergencyContact String?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  applications     Application[]
+}
+
+model ExamProject {
+  id                String       @id @default(cuid())
+  slug              String       @unique
+  title             String
+  category          String
+  location          String
+  description       String
+  registrationStart DateTime
+  registrationEnd   DateTime
+  reviewEnd         DateTime
+  paymentEnd        DateTime
+  ticketStart       DateTime
+  scoreReleaseAt    DateTime
+  fee               Decimal      @db.Decimal(10, 2)
+  published         Boolean      @default(true)
+  admissionNotice   String
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  applications      Application[]
+}
+
+model Application {
+  id            String            @id @default(cuid())
+  examProjectId String
+  userId        String
+  status        ApplicationStatus @default(DRAFT)
+  major         String
+  education     String
+  employer      String?
+  photoUrl      String?
+  documents     Json?
+  reviewNote    String?
+  submittedAt   DateTime?
+  approvedAt    DateTime?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  examProject   ExamProject       @relation(fields: [examProjectId], references: [id])
+  user          User              @relation(fields: [userId], references: [id])
+  orders        PaymentOrder[]
+  ticket        AdmissionTicket?
+  score         ScoreRecord?
+
+  @@unique([userId, examProjectId])
+}
+
+model PaymentOrder {
+  id              String          @id @default(cuid())
+  orderNo         String          @unique
+  applicationId   String
+  amount          Decimal         @db.Decimal(10, 2)
+  provider        PaymentProvider
+  status          PaymentStatus   @default(PENDING)
+  callbackPayload Json?
+  createdAt       DateTime        @default(now())
+  paidAt          DateTime?
+  application     Application     @relation(fields: [applicationId], references: [id])
+}
+
+model AdmissionTicket {
+  id              String      @id @default(cuid())
+  applicationId   String      @unique
+  ticketNo        String      @unique
+  examTime        DateTime
+  venue           String
+  room            String
+  seatNo          String
+  templateVersion String      @default("v1")
+  printedAt       DateTime?
+  application     Application @relation(fields: [applicationId], references: [id])
+}
+
+model ScoreRecord {
+  id            String      @id @default(cuid())
+  applicationId String      @unique
+  ticketNo      String
+  idCard        String
+  score         Decimal     @db.Decimal(5, 2)
+  ranking       Int?
+  published     Boolean     @default(false)
+  queryNote     String?
+  releasedAt    DateTime?
+  application   Application @relation(fields: [applicationId], references: [id])
+}
+
+model Notice {
+  id          String   @id @default(cuid())
+  title       String
+  summary     String
+  body        String
+  category    String
+  pinned      Boolean  @default(false)
+  publishedAt DateTime @default(now())
+}
+
+model AdminSession {
+  id        String   @id @default(cuid())
+  userId    String
+  role      UserRole
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model AdminOperationLog {
+  id          String   @id @default(cuid())
+  adminUserId String
+  adminName   String
+  action      String
+  targetType  String
+  targetId    String
+  detail      String
+  createdAt   DateTime @default(now())
+}
