@@ -90,6 +90,7 @@ export const users: User[] = [
     idCard: "150101199506121234",
     password: "123456",
     gender: "男",
+    ethnicity: "蒙古族",
     email: "zhang@example.com",
     address: "呼和浩特市赛罕区大学东路 18 号",
     emergencyContact: "张先生 13900000000",
@@ -102,6 +103,7 @@ export const users: User[] = [
     idCard: "150101198901011234",
     password: "admin123",
     gender: "女",
+    ethnicity: "汉族",
     email: "admin@example.com",
   },
   {
@@ -112,6 +114,7 @@ export const users: User[] = [
     idCard: "150101199003031234",
     password: "review123",
     gender: "男",
+    ethnicity: "汉族",
     email: "reviewer@example.com",
   },
 ];

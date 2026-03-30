@@ -51,6 +51,7 @@ function toUser(user: {
   passwordHash?: string;
   password?: string;
   gender?: string | null;
+  ethnicity?: string | null;
   email?: string | null;
   address?: string | null;
   emergencyContact?: string | null;
@@ -64,6 +65,7 @@ function toUser(user: {
     // Never expose stored credentials back into the app-facing user object.
     password: "",
     gender: user.gender ?? undefined,
+    ethnicity: user.ethnicity ?? undefined,
     email: user.email ?? undefined,
     address: user.address ?? undefined,
     emergencyContact: user.emergencyContact ?? undefined,
@@ -373,6 +375,7 @@ export const repo = {
         idCard: input.idCard,
         passwordHash,
         gender: input.gender,
+        ethnicity: input.ethnicity,
         email: input.email,
         address: input.address,
         emergencyContact: input.emergencyContact,

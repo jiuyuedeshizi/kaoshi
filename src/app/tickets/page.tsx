@@ -49,6 +49,14 @@ export default async function TicketsPage() {
                 <Link className="button" href={`/tickets/${ticket.applicationId}`}>
                   打开打印页
                 </Link>
+                <a
+                  className="button-secondary"
+                  href={`/api/tickets/${ticket.applicationId}/pdf`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  下载 PDF
+                </a>
               </div>
             </section>
           ))

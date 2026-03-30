@@ -10,6 +10,8 @@ export function CandidateRegisterForm() {
     phone: "13800000001",
     idCard: "150101199506121234",
     password: "123456",
+    gender: "男",
+    ethnicity: "蒙古族",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -61,6 +63,17 @@ export function CandidateRegisterForm() {
           value={form.password}
           onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
         />
+      </div>
+      <div className="field">
+        <label>性别</label>
+        <select value={form.gender} onChange={(e) => setForm((p) => ({ ...p, gender: e.target.value }))}>
+          <option value="男">男</option>
+          <option value="女">女</option>
+        </select>
+      </div>
+      <div className="field">
+        <label>民族</label>
+        <input value={form.ethnicity} onChange={(e) => setForm((p) => ({ ...p, ethnicity: e.target.value }))} />
       </div>
       <div className="field-full">
         <label>注册说明</label>

@@ -33,6 +33,7 @@ async function main() {
       idCard: user.idCard,
       passwordHash: hashPassword(user.password),
       gender: user.gender,
+      ethnicity: user.ethnicity,
       email: user.email,
       address: user.address,
       emergencyContact: user.emergencyContact,

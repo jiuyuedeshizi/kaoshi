@@ -1,14 +1,45 @@
 import { NextResponse } from "next/server";
+import { verifyAlipayParams } from "@/lib/alipay";
 import { repo } from "@/lib/repository";
+
+function toRecordFromSearchParams(params: URLSearchParams) {
+  return Object.fromEntries(params.entries());
+}
 
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ provider: string }> },
 ) {
-  const body = (await request.json()) as Record<string, string>;
   const { provider } = await params;
-  const orderNo = body.orderNo;
   const normalizedProvider = provider.toUpperCase();
+
+  if (normalizedProvider === "ALIPAY") {
+    const body = toRecordFromSearchParams(new URLSearchParams(await request.text()));
+    const alipayOrderNo = body.out_trade_no;
+
+    if (!alipayOrderNo) {
+      return new Response("failure", { status: 400 });
+    }
+
+    if (!verifyAlipayParams(body)) {
+      return new Response("failure", { status: 400 });
+    }
+
+    const existingOrder = await repo.findOrderByOrderNo(alipayOrderNo);
+    if (!existingOrder || existingOrder.provider !== "ALIPAY") {
+      return new Response("failure", { status: 404 });
+    }
+
+    if (!["TRADE_SUCCESS", "TRADE_FINISHED"].includes(body.trade_status ?? "")) {
+      return new Response("success");
+    }
+
+    const updated = await repo.markOrderPaid(alipayOrderNo, { ...body, provider: normalizedProvider });
+    return new Response(updated ? "success" : "failure");
+  }
+
+  const body = (await request.json()) as Record<string, string>;
+  const orderNo = body.orderNo;
 
   if (!orderNo) {
     return NextResponse.json({ ok: false, error: "缺少订单号" }, { status: 400 });

@@ -21,7 +21,6 @@ export default function LoginPage({
         <section className="card">
           <div className="panel-header">
             <h2>登录表单</h2>
-            <span className="badge">API: /api/auth/login</span>
           </div>
           <CandidateLoginForm nextPath={resolvedSearchParams?.next} />
         </section>

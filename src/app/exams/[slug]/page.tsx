@@ -30,7 +30,6 @@ export default async function ExamDetailPage({
         <section className="card">
           <div className="panel-header">
             <h2>报名信息填报</h2>
-            <span className="badge">API: /api/applications</span>
           </div>
           <ExamApplicationForm
             examProjectId={exam.id}

@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { requireCandidatePageAccess } from "@/lib/candidate-auth";
+import { TicketPdfPreview } from "@/components/candidate/ticket-pdf-preview";
 import { SiteFrame } from "@/components/layout/site-frame";
 import { isReleasedAt } from "@/lib/exam-window";
 import { repo } from "@/lib/repository";
@@ -23,32 +25,31 @@ export default async function TicketDetailPage({
     notFound();
   }
 
+  const downloadUrl = `/api/tickets/${applicationId}/pdf`;
   return (
     <SiteFrame currentPath="/tickets">
       <main className="page-section">
-        <div className="print-sheet">
-          <div className="ticket-header">
-            <h1>邻泰人事考试准考证</h1>
-            <p>{exam.title}</p>
-          </div>
-          <div className="ticket-grid">
-            <div>姓名：{candidate.name}</div>
-            <div>身份证号：{candidate.idCard}</div>
-            <div>准考证号：{ticket.ticketNo}</div>
-            <div>报考专业：{application.major}</div>
-            <div>考试时间：{ticket.examTime}</div>
-            <div>考试地点：{ticket.venue}</div>
-            <div>考场：{ticket.room}</div>
-            <div>座位号：{ticket.seatNo}</div>
-          </div>
-          <section className="card" style={{ marginTop: 24 }}>
-            <h2>考生须知</h2>
-            <ul className="timeline">
-              <li>请考生携带本人有效身份证件和准考证按时参加考试。</li>
-              <li>开考 30 分钟后不得进入考场，考试结束前不得提前交卷。</li>
-              <li>请认真核对个人信息，如有问题请及时联系考务部门。</li>
-            </ul>
-          </section>
+        <div className="actions-row no-print" style={{ width: "min(100%, 820px)", margin: "0 auto 16px" }}>
+          <a
+            className="button"
+            href={downloadUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            下载 PDF 准考证
+          </a>
+          <Link className="button-secondary" href="/tickets">
+            返回准考证列表
+          </Link>
+        </div>
+        <div className="pdf-preview-shell">
+          <TicketPdfPreview
+            src={downloadUrl}
+            title={`${ticket.ticketNo} 准考证 PDF 预览`}
+          />
+          <p className="empty-copy no-print">
+            页面展示内容与下载 PDF 保持一致，如预览失败可直接点击上方按钮下载。
+          </p>
         </div>
       </main>
     </SiteFrame>

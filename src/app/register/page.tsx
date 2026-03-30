@@ -14,7 +14,6 @@ export default function RegisterPage() {
         <section className="card">
           <div className="panel-header">
             <h2>注册信息</h2>
-            <span className="badge">API: /api/auth/register</span>
           </div>
           <CandidateRegisterForm />
         </section>

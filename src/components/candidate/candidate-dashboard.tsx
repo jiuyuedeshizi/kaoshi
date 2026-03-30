@@ -67,6 +67,10 @@ export function CandidateDashboard({
                   <label>邮箱</label>
                   <input readOnly value={candidate.email ?? ""} />
                 </div>
+                <div className="field">
+                  <label>民族</label>
+                  <input readOnly value={candidate.ethnicity ?? ""} />
+                </div>
                 <div className="field-full">
                   <label>联系地址</label>
                   <input readOnly value={candidate.address ?? ""} />

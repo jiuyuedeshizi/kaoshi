@@ -55,6 +55,7 @@ export interface User {
   idCard: string;
   password: string;
   gender?: string;
+  ethnicity?: string;
   email?: string;
   address?: string;
   emergencyContact?: string;

@@ -44,7 +44,6 @@ export function ScoreQueryForm() {
       <section className="card">
         <div className="panel-header">
           <h2>查询条件</h2>
-          <span className="badge">API: /api/scores/query</span>
         </div>
         <form className="form-grid" onSubmit={handleSubmit}>
           <div className="field">

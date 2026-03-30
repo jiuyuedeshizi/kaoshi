@@ -5,6 +5,8 @@ export const registerSchema = z.object({
   phone: z.string().regex(/^1\d{10}$/, "请输入正确的手机号"),
   idCard: z.string().min(15, "请输入正确的身份证号"),
   password: z.string().min(6, "密码至少 6 位"),
+  gender: z.string().min(1, "请选择性别").optional(),
+  ethnicity: z.string().min(1, "请输入民族").optional(),
 });
 
 export const loginSchema = z.object({
