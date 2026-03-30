@@ -17,15 +17,29 @@ export async function POST(request: Request) {
 
   const user = await repo.authenticate(parsed.data.account, parsed.data.password);
 
-  if (!user || !["ADMIN", "REVIEWER"].includes(user.role)) {
+  if (!user || !["ADMIN", "REVIEWER", "SCHEDULER", "SCORE_MANAGER", "FINANCE", "CONTENT_MANAGER"].includes(user.role)) {
+    await repo.createLoginLog({
+      account: parsed.data.account,
+      success: false,
+      ip: request.headers.get("x-forwarded-for") ?? undefined,
+      userAgent: request.headers.get("user-agent") ?? undefined,
+    });
     return NextResponse.json(
       { ok: false, error: "仅后台账号可以登录管理端" },
       { status: 401 },
     );
   }
 
-  const role = user.role as "ADMIN" | "REVIEWER";
+  const role = user.role as "ADMIN" | "REVIEWER" | "SCHEDULER" | "SCORE_MANAGER" | "FINANCE" | "CONTENT_MANAGER";
   const session = await createAdminSession(user.id, role);
+  await repo.createLoginLog({
+    userId: user.id,
+    account: parsed.data.account,
+    role: user.role,
+    success: true,
+    ip: request.headers.get("x-forwarded-for") ?? undefined,
+    userAgent: request.headers.get("user-agent") ?? undefined,
+  });
 
   const response = NextResponse.json({
     ok: true,

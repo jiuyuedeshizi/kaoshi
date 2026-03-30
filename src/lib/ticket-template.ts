@@ -12,8 +12,8 @@ export const TICKET_NOTICE_ITEMS = [
   "11.若有违纪违规行为，将按<<事业单位公开招聘违纪违规行为处理规定>><<刑法修正案(九)>>等规定进行处理。",
 ] as const;
 
-export function buildTicketSubjectName(major: string) {
-  return `${major}职业能力测试`;
+export function buildTicketSubjectName(subjectName: string, major: string) {
+  return subjectName || `${major}职业能力测试`;
 }
 
 export function buildTicketArrivalTip(examTime: string) {

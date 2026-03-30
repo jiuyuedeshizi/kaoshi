@@ -1,11 +1,27 @@
-export type UserRole = "CANDIDATE" | "ADMIN" | "REVIEWER";
+export type UserRole =
+  | "CANDIDATE"
+  | "ADMIN"
+  | "REVIEWER"
+  | "SCHEDULER"
+  | "SCORE_MANAGER"
+  | "FINANCE"
+  | "CONTENT_MANAGER";
 export type AdminPermission =
   | "VIEW_DASHBOARD"
   | "MANAGE_EXAMS"
+  | "MANAGE_JOBS"
+  | "MANAGE_LOCATIONS"
+  | "MANAGE_SCHEDULING"
+  | "MANAGE_TICKETS"
   | "REVIEW_APPLICATIONS"
   | "VIEW_ORDERS"
   | "MANAGE_SCORES"
-  | "MANAGE_NOTICES";
+  | "MANAGE_NOTICES"
+  | "MANAGE_USERS"
+  | "VIEW_REPORTS"
+  | "VIEW_LOGS"
+  | "MANAGE_SETTINGS"
+  | "MANAGE_PERMISSIONS";
 
 export type ApplicationStatus =
   | "DRAFT"
@@ -44,7 +60,82 @@ export interface ExamProject {
   scoreReleaseAt: string;
   fee: number;
   published: boolean;
+  defaultSubject?: string;
+  ticketTitle?: string;
+  ticketSubtitle?: string;
+  ticketTemplateVersion?: string;
   admissionNotice: string;
+}
+
+export interface JobPosition {
+  id: string;
+  examProjectId: string;
+  code: string;
+  name: string;
+  quota: number;
+  organization?: string;
+  examSubject?: string;
+  majorRequirement?: string;
+  educationRequirement?: string;
+  degreeRequirement?: string;
+  ageRequirement?: string;
+  genderRequirement?: string;
+  householdRequirement?: string;
+  experienceRequirement?: string;
+  notes?: string;
+  enabled: boolean;
+  createdAt: string;
+}
+
+export interface ExamArea {
+  id: string;
+  code: string;
+  name: string;
+  enabled: boolean;
+  createdAt: string;
+}
+
+export interface ExamVenue {
+  id: string;
+  areaId: string;
+  code: string;
+  name: string;
+  address: string;
+  enabled: boolean;
+  createdAt: string;
+}
+
+export interface ExamRoom {
+  id: string;
+  venueId: string;
+  name: string;
+  capacity: number;
+  enabled: boolean;
+  createdAt: string;
+}
+
+export interface TicketTemplate {
+  id: string;
+  name: string;
+  title: string;
+  subtitle?: string;
+  noticeItems: string[];
+  showPhoto: boolean;
+  showEthnicity: boolean;
+  showJobCode: boolean;
+  showExamSubject: boolean;
+  isDefault: boolean;
+  version: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SystemSetting {
+  id: string;
+  key: string;
+  value: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface User {
@@ -59,6 +150,8 @@ export interface User {
   email?: string;
   address?: string;
   emergencyContact?: string;
+  disabled?: boolean;
+  blacklisted?: boolean;
 }
 
 export interface AdminSession {
@@ -78,6 +171,15 @@ export interface Application {
   id: string;
   examProjectId: string;
   userId: string;
+  jobPositionId?: string;
+  jobCode?: string;
+  subjectName?: string;
+  jobSnapshot?: {
+    id: string;
+    code: string;
+    name: string;
+    subjectName?: string;
+  };
   status: ApplicationStatus;
   major: string;
   education: string;
@@ -85,6 +187,8 @@ export interface Application {
   photoUrl?: string;
   documents: string[];
   reviewNote?: string;
+  materialRevision?: number;
+  locked?: boolean;
   submittedAt?: string;
   approvedAt?: string;
   createdAt: string;
@@ -97,6 +201,10 @@ export interface PaymentOrder {
   amount: number;
   provider: PaymentProvider;
   status: PaymentStatus;
+  providerTradeNo?: string;
+  reconciliationStatus?: string;
+  lastQueriedAt?: string;
+  reconciledAt?: string;
   callbackPayload?: Record<string, string>;
   createdAt: string;
   paidAt?: string;
@@ -107,9 +215,16 @@ export interface AdmissionTicket {
   applicationId: string;
   ticketNo: string;
   examTime: string;
+  areaName?: string;
   venue: string;
+  venueAddress?: string;
   room: string;
   seatNo: string;
+  examSubject?: string;
+  jobCode?: string;
+  jobName?: string;
+  templateId?: string;
+  schedulingStatus?: string;
   templateVersion: string;
   printedAt?: string;
 }
@@ -148,5 +263,35 @@ export interface AdminOperationLog {
   targetType: string;
   targetId: string;
   detail: string;
+  createdAt: string;
+}
+
+export interface LoginLog {
+  id: string;
+  userId?: string;
+  account: string;
+  role?: UserRole;
+  success: boolean;
+  ip?: string;
+  userAgent?: string;
+  createdAt: string;
+}
+
+export interface PaymentCallbackLog {
+  id: string;
+  provider: PaymentProvider;
+  orderNo: string;
+  success: boolean;
+  message?: string;
+  payload?: Record<string, string>;
+  createdAt: string;
+}
+
+export interface TicketDownloadLog {
+  id: string;
+  userId: string;
+  applicationId: string;
+  ticketId: string;
+  disposition: "INLINE" | "ATTACHMENT";
   createdAt: string;
 }

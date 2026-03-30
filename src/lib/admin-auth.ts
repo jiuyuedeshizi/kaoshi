@@ -9,18 +9,35 @@ import type { AdminPermission, AdminSession, User, UserRole } from "@/lib/types"
 const roleLabels: Record<Exclude<UserRole, "CANDIDATE">, string> = {
   ADMIN: "系统管理员",
   REVIEWER: "审核专员",
+  SCHEDULER: "排考管理员",
+  SCORE_MANAGER: "成绩管理员",
+  FINANCE: "财务人员",
+  CONTENT_MANAGER: "公告管理员",
 };
 
 const permissionMap: Record<Exclude<UserRole, "CANDIDATE">, AdminPermission[]> = {
   ADMIN: [
     "VIEW_DASHBOARD",
     "MANAGE_EXAMS",
+    "MANAGE_JOBS",
+    "MANAGE_LOCATIONS",
+    "MANAGE_SCHEDULING",
+    "MANAGE_TICKETS",
     "REVIEW_APPLICATIONS",
     "VIEW_ORDERS",
     "MANAGE_SCORES",
     "MANAGE_NOTICES",
+    "MANAGE_USERS",
+    "VIEW_REPORTS",
+    "VIEW_LOGS",
+    "MANAGE_SETTINGS",
+    "MANAGE_PERMISSIONS",
   ],
   REVIEWER: ["VIEW_DASHBOARD", "REVIEW_APPLICATIONS", "VIEW_ORDERS"],
+  SCHEDULER: ["VIEW_DASHBOARD", "MANAGE_LOCATIONS", "MANAGE_SCHEDULING", "MANAGE_TICKETS"],
+  SCORE_MANAGER: ["VIEW_DASHBOARD", "MANAGE_SCORES", "VIEW_REPORTS"],
+  FINANCE: ["VIEW_DASHBOARD", "VIEW_ORDERS", "VIEW_REPORTS", "VIEW_LOGS"],
+  CONTENT_MANAGER: ["VIEW_DASHBOARD", "MANAGE_NOTICES"],
 };
 
 export interface CurrentAdmin {

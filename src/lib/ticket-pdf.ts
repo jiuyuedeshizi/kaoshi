@@ -8,7 +8,7 @@ import {
   buildTicketSubjectName,
   buildTicketVenueHint,
 } from "@/lib/ticket-template";
-import type { AdmissionTicket, Application, ExamProject, User } from "@/lib/types";
+import type { AdmissionTicket, Application, ExamProject, TicketTemplate, User } from "@/lib/types";
 
 const PAGE_WIDTH = 595.28;
 const PAGE_HEIGHT = 841.89;
@@ -27,6 +27,7 @@ interface TicketPdfPayload {
   application: Application;
   candidate: User;
   exam: ExamProject;
+  template?: TicketTemplate | null;
 }
 
 function resolveFontPath() {
@@ -178,12 +179,19 @@ export async function generateTicketPdf(payload: TicketPdfPayload) {
     : await pdfDoc.embedFont(StandardFonts.Helvetica);
 
   const boldFont = regularFont;
+  const templateTitle = payload.template?.title || payload.exam.ticketTitle || payload.exam.title;
+  const templateSubtitle = payload.template?.subtitle || payload.exam.ticketSubtitle || "准 考 证";
+  const noticeItems = payload.template?.noticeItems?.length ? payload.template.noticeItems : [...TICKET_NOTICE_ITEMS];
+  const showPhoto = payload.template?.showPhoto ?? true;
+  const showEthnicity = payload.template?.showEthnicity ?? true;
+  const showJobCode = payload.template?.showJobCode ?? true;
+  const showExamSubject = payload.template?.showExamSubject ?? true;
 
   drawText(page, regularFont, new Date().toLocaleString("zh-CN", { hour12: false }), MARGIN, PAGE_HEIGHT - 24, 9.5);
   drawCentered(page, regularFont, "邻泰考生网上报名系统", PAGE_HEIGHT - 24, 10);
 
-  drawCenteredWrappedBlock(page, boldFont, payload.exam.title, PAGE_HEIGHT - 66, PAGE_WIDTH - 160, 18, 23);
-  drawCentered(page, boldFont, "准 考 证", PAGE_HEIGHT - 138, 24);
+  drawCenteredWrappedBlock(page, boldFont, templateTitle, PAGE_HEIGHT - 66, PAGE_WIDTH - 160, 18, 23);
+  drawCentered(page, boldFont, templateSubtitle, PAGE_HEIGHT - 138, 24);
 
   const startX = MARGIN;
   let yTop = PAGE_HEIGHT - 170;
@@ -196,9 +204,16 @@ export async function generateTicketPdf(payload: TicketPdfPayload) {
   const infoRows = [
     ["报名序号", payload.application.id, "所属考区", payload.exam.location],
     ["考生姓名", payload.candidate.name, "性别", payload.candidate.gender ?? "男"],
-    ["身份证号", payload.candidate.idCard, "民族", payload.candidate.ethnicity ?? "-"],
-    ["岗位代码", payload.ticket.ticketNo.slice(-8), "笔试类别", payload.application.major],
-    ["岗位名称", payload.application.major, "", ""],
+    ["身份证号", payload.candidate.idCard, "民族", showEthnicity ? payload.candidate.ethnicity ?? "-" : "-"],
+    [
+      "岗位代码",
+      showJobCode ? payload.ticket.jobCode ?? payload.application.jobCode ?? payload.ticket.ticketNo.slice(-8) : "-",
+      "笔试类别",
+      showExamSubject
+        ? payload.ticket.examSubject ?? payload.application.subjectName ?? payload.application.major
+        : payload.application.major,
+    ],
+    ["岗位名称", payload.ticket.jobName ?? payload.application.major, "", ""],
   ];
 
   infoRows.forEach((row, index) => {
@@ -233,7 +248,7 @@ export async function generateTicketPdf(payload: TicketPdfPayload) {
     borderWidth: 1,
   });
 
-  const photoPath = resolvePhotoPath(payload.application.photoUrl);
+  const photoPath = showPhoto ? resolvePhotoPath(payload.application.photoUrl) : null;
   if (photoPath) {
     try {
       const photoBytes = fs.readFileSync(photoPath);
@@ -266,7 +281,7 @@ export async function generateTicketPdf(payload: TicketPdfPayload) {
   x = startX;
   const values = [
     payload.ticket.ticketNo,
-    buildTicketSubjectName(payload.application.major),
+    buildTicketSubjectName(payload.ticket.examSubject ?? payload.application.subjectName ?? "", payload.application.major),
     buildTicketArrivalTip(payload.ticket.examTime),
     payload.ticket.venue,
     payload.ticket.room,
@@ -298,7 +313,7 @@ export async function generateTicketPdf(payload: TicketPdfPayload) {
   const noticeLineHeight = 12.5;
   const noticeGap = 2;
   const noticeContentWidth = PAGE_WIDTH - MARGIN * 2 - 20;
-  const noticeHeight = TICKET_NOTICE_ITEMS.reduce((total, item) => {
+  const noticeHeight = noticeItems.reduce((total, item) => {
     return total + getWrappedBlockHeight(regularFont, item, noticeFontSize, noticeContentWidth, noticeLineHeight) + noticeGap;
   }, 16);
   page.drawRectangle({
@@ -321,7 +336,7 @@ export async function generateTicketPdf(payload: TicketPdfPayload) {
   });
 
   let noticeY = yTop - 16;
-  TICKET_NOTICE_ITEMS.forEach((item) => {
+  noticeItems.forEach((item) => {
     const blockHeight = getWrappedBlockHeight(regularFont, item, noticeFontSize, noticeContentWidth, noticeLineHeight);
     drawWrappedBlock(page, regularFont, item, startX + 10, noticeY, noticeContentWidth, noticeFontSize, noticeLineHeight);
     noticeY -= blockHeight + noticeGap;

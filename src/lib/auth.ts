@@ -19,7 +19,11 @@ export function decodeAdminCookie(value?: string | null) {
 
   const decodedValue = decodeURIComponent(value);
   const [sessionId, userId, role] = decodedValue.split(":");
-  if (!sessionId || !userId || (role !== "ADMIN" && role !== "REVIEWER")) {
+  if (
+    !sessionId ||
+    !userId ||
+    !["ADMIN", "REVIEWER", "SCHEDULER", "SCORE_MANAGER", "FINANCE", "CONTENT_MANAGER"].includes(role)
+  ) {
     return null;
   }
 

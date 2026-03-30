@@ -1,5 +1,5 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const fs = require('fs');
-const path = require('path');
 
 const commitMsgFile = process.argv[2];
 if (!commitMsgFile) process.exit(0);

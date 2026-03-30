@@ -36,7 +36,7 @@ export async function getCandidateDashboard(userId: string) {
 
 export async function getAdminDashboard(currentUser: {
   name: string;
-  role: "ADMIN" | "REVIEWER";
+  role: "ADMIN" | "REVIEWER" | "SCHEDULER" | "SCORE_MANAGER" | "FINANCE" | "CONTENT_MANAGER";
 }) {
   return {
     currentUser: {

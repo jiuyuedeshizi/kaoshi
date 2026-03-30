@@ -200,7 +200,7 @@ export function CandidateDashboard({
               ) : (
                 <EmptyState
                   title="暂无可打印准考证"
-                  description="报名审核通过并完成缴费后，系统会在开放时间自动生成准考证。"
+                  description="报名审核通过并完成缴费后，系统会先进入排考编排，再在开放时间生成准考证。"
                 />
               )}
             </div>
@@ -209,7 +209,7 @@ export function CandidateDashboard({
             <h2>温馨提示</h2>
             <ul className="timeline">
               <li>报名提交后请关注审核反馈，驳回原因会展示在报名记录中。</li>
-              <li>缴费成功后请再次核对考试时间、地点和准考证信息。</li>
+              <li>缴费成功后系统会进入排考编排阶段，完成编排后再开放准考证打印。</li>
               <li>成绩发布后可使用证件号或准考证号查询。</li>
             </ul>
           </section>

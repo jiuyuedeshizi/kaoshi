@@ -22,8 +22,9 @@ export default async function TicketsPage() {
   const tickets = (await repo.listTickets()).filter((item) => appIds.has(item.applicationId) && printableAppIds.has(item.applicationId));
   const waitingApps = apps.filter((item) => {
     const exam = examMap.get(item.examProjectId);
-    return item.status === "TICKET_READY" && exam && !isReleasedAt(exam.ticketStart);
+    return ["PAID", "TICKET_READY"].includes(item.status) && exam && !isReleasedAt(exam.ticketStart);
   });
+  const schedulingApps = apps.filter((item) => item.status === "PAID");
 
   return (
     <SiteFrame currentPath="/tickets">
@@ -66,9 +67,22 @@ export default async function TicketsPage() {
               <h2>暂无可打印准考证</h2>
               <span className="badge warning">等待开放</span>
             </div>
-            <p>请先完成报名审核和缴费。待准考证生成后，这里会显示打印入口。</p>
+            <p>请先完成报名审核、缴费和后台排考。待准考证生成后，这里会显示打印入口。</p>
           </section>
         )}
+        {schedulingApps.length ? (
+          <section className="card">
+            <div className="panel-header">
+              <h2>排考进行中</h2>
+              <span className="badge warning">已缴费待编排</span>
+            </div>
+            <ul className="timeline">
+              {schedulingApps.map((item) => (
+                <li key={item.id}>{item.id} / {item.major} / 缴费已完成，等待后台分配考点考场和座位</li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
         {waitingApps.length ? (
           <section className="card">
             <div className="panel-header">
@@ -78,7 +92,7 @@ export default async function TicketsPage() {
             <ul className="timeline">
               {waitingApps.map((item) => {
                 const exam = examMap.get(item.examProjectId);
-                return <li key={item.id}>{item.id} / {item.major} / 开放时间：{exam?.ticketStart}</li>;
+                return <li key={item.id}>{item.id} / {item.major} / {item.status === "PAID" ? "已缴费待编排" : "已编排待开放"} / 开放时间：{exam?.ticketStart}</li>;
               })}
             </ul>
           </section>

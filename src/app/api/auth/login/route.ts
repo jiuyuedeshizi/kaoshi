@@ -17,6 +17,12 @@ export async function POST(request: Request) {
   const user = await repo.authenticate(parsed.data.account, parsed.data.password);
 
   if (!user) {
+    await repo.createLoginLog({
+      account: parsed.data.account,
+      success: false,
+      ip: request.headers.get("x-forwarded-for") ?? undefined,
+      userAgent: request.headers.get("user-agent") ?? undefined,
+    });
     return NextResponse.json(
       { ok: false, error: "账号或密码错误" },
       { status: 401 },
@@ -29,6 +35,15 @@ export async function POST(request: Request) {
       { status: 403 },
     );
   }
+
+  await repo.createLoginLog({
+    userId: user.id,
+    account: parsed.data.account,
+    role: user.role,
+    success: true,
+    ip: request.headers.get("x-forwarded-for") ?? undefined,
+    userAgent: request.headers.get("user-agent") ?? undefined,
+  });
 
   const response = NextResponse.json({
     ok: true,

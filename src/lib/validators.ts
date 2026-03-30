@@ -16,7 +16,10 @@ export const loginSchema = z.object({
 
 export const applicationSchema = z.object({
   examProjectId: z.string().min(1),
+  jobPositionId: z.string().min(1, "请选择岗位"),
   major: z.string().min(2),
+  jobCode: z.string().min(1, "岗位代码缺失"),
+  subjectName: z.string().min(2, "考试科目缺失"),
   education: z.string().min(2),
   employer: z.string().optional(),
   photoUrl: z.string().min(1).optional(),
@@ -54,7 +57,74 @@ export const examSchema = z.object({
   paymentEnd: z.string(),
   ticketStart: z.string(),
   scoreReleaseAt: z.string(),
+  defaultSubject: z.string().optional(),
+  ticketTitle: z.string().optional(),
+  ticketSubtitle: z.string().optional(),
+  ticketTemplateVersion: z.string().optional(),
   admissionNotice: z.string().min(10),
+});
+
+export const jobSchema = z.object({
+  examProjectId: z.string().min(1),
+  code: z.string().min(2),
+  name: z.string().min(2),
+  quota: z.number().int().positive(),
+  organization: z.string().optional(),
+  examSubject: z.string().optional(),
+  majorRequirement: z.string().optional(),
+  educationRequirement: z.string().optional(),
+  degreeRequirement: z.string().optional(),
+  ageRequirement: z.string().optional(),
+  genderRequirement: z.string().optional(),
+  householdRequirement: z.string().optional(),
+  experienceRequirement: z.string().optional(),
+  notes: z.string().optional(),
+  enabled: z.boolean().optional(),
+});
+
+export const examAreaSchema = z.object({
+  code: z.string().min(2),
+  name: z.string().min(2),
+  enabled: z.boolean().optional(),
+});
+
+export const examVenueSchema = z.object({
+  areaId: z.string().min(1),
+  code: z.string().min(2),
+  name: z.string().min(2),
+  address: z.string().min(4),
+  enabled: z.boolean().optional(),
+});
+
+export const examRoomSchema = z.object({
+  venueId: z.string().min(1),
+  name: z.string().min(1),
+  capacity: z.number().int().positive(),
+  enabled: z.boolean().optional(),
+});
+
+export const schedulingSchema = z.object({
+  examProjectId: z.string().min(1),
+  areaId: z.string().optional(),
+  regenerate: z.boolean().optional(),
+});
+
+export const ticketTemplateSchema = z.object({
+  name: z.string().min(2),
+  title: z.string().min(4),
+  subtitle: z.string().optional(),
+  noticeItems: z.array(z.string().min(2)).min(1),
+  showPhoto: z.boolean().default(true),
+  showEthnicity: z.boolean().default(true),
+  showJobCode: z.boolean().default(true),
+  showExamSubject: z.boolean().default(true),
+  isDefault: z.boolean().default(true),
+  version: z.string().min(1),
+});
+
+export const systemSettingSchema = z.object({
+  key: z.string().min(1),
+  value: z.record(z.string(), z.unknown()),
 });
 
 export const noticeSchema = z.object({

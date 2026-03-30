@@ -16,6 +16,10 @@ const initialForm = {
   paymentEnd: "2026-04-14 18:00",
   ticketStart: "2026-05-08 09:00",
   scoreReleaseAt: "2026-05-28 10:00",
+  defaultSubject: "职业能力倾向测验",
+  ticketTitle: "2026 年示例考试项目笔试",
+  ticketSubtitle: "准考证",
+  ticketTemplateVersion: "v2",
   admissionNotice: "请按要求上传报名材料并保证信息真实有效。",
 };
 
@@ -75,6 +79,22 @@ export function AdminExamForm() {
       <div className="field">
         <label>报名开始</label>
         <input value={form.registrationStart} onChange={(e) => setForm((p) => ({ ...p, registrationStart: e.target.value }))} />
+      </div>
+      <div className="field">
+        <label>默认考试科目</label>
+        <input value={form.defaultSubject} onChange={(e) => setForm((p) => ({ ...p, defaultSubject: e.target.value }))} />
+      </div>
+      <div className="field-full">
+        <label>准考证主标题</label>
+        <input value={form.ticketTitle} onChange={(e) => setForm((p) => ({ ...p, ticketTitle: e.target.value }))} />
+      </div>
+      <div className="field">
+        <label>准考证副标题</label>
+        <input value={form.ticketSubtitle} onChange={(e) => setForm((p) => ({ ...p, ticketSubtitle: e.target.value }))} />
+      </div>
+      <div className="field">
+        <label>准考证模板版本</label>
+        <input value={form.ticketTemplateVersion} onChange={(e) => setForm((p) => ({ ...p, ticketTemplateVersion: e.target.value }))} />
       </div>
       <div className="field-full">
         <label>项目说明</label>

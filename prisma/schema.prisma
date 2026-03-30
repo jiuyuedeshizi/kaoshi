@@ -11,6 +11,10 @@ enum UserRole {
   CANDIDATE
   ADMIN
   REVIEWER
+  SCHEDULER
+  SCORE_MANAGER
+  FINANCE
+  CONTENT_MANAGER
 }
 
 enum ApplicationStatus {
@@ -48,9 +52,13 @@ model User {
   email            String?
   address          String?
   emergencyContact String?
+  disabled         Boolean    @default(false)
+  blacklisted      Boolean    @default(false)
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
   applications     Application[]
+  ticketDownloads  TicketDownloadLog[]
+  loginLogs        LoginLog[]
 }
 
 model ExamProject {
@@ -68,16 +76,111 @@ model ExamProject {
   scoreReleaseAt    DateTime
   fee               Decimal      @db.Decimal(10, 2)
   published         Boolean      @default(true)
+  defaultSubject    String?
+  ticketTitle       String?
+  ticketSubtitle    String?
+  ticketTemplateVersion String?  @default("v1")
   admissionNotice   String
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
   applications      Application[]
+  jobs              JobPosition[]
+}
+
+model JobPosition {
+  id                   String      @id @default(cuid())
+  examProjectId        String
+  code                 String
+  name                 String
+  quota                Int         @default(1)
+  organization         String?
+  examSubject          String?
+  majorRequirement     String?
+  educationRequirement String?
+  degreeRequirement    String?
+  ageRequirement       String?
+  genderRequirement    String?
+  householdRequirement String?
+  experienceRequirement String?
+  notes                String?
+  enabled              Boolean     @default(true)
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+  examProject          ExamProject @relation(fields: [examProjectId], references: [id])
+  applications         Application[]
+
+  @@unique([examProjectId, code])
+}
+
+model ExamArea {
+  id        String      @id @default(cuid())
+  code      String      @unique
+  name      String
+  enabled   Boolean     @default(true)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  venues    ExamVenue[]
+}
+
+model ExamVenue {
+  id        String     @id @default(cuid())
+  areaId    String
+  code      String     @unique
+  name      String
+  address   String
+  enabled   Boolean    @default(true)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  area      ExamArea   @relation(fields: [areaId], references: [id])
+  rooms     ExamRoom[]
+}
+
+model ExamRoom {
+  id        String    @id @default(cuid())
+  venueId    String
+  name      String
+  capacity  Int
+  enabled   Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  venue     ExamVenue @relation(fields: [venueId], references: [id])
+
+  @@unique([venueId, name])
+}
+
+model TicketTemplate {
+  id               String   @id @default(cuid())
+  name             String
+  title            String
+  subtitle         String?
+  noticeItems      Json
+  showPhoto        Boolean  @default(true)
+  showEthnicity    Boolean  @default(true)
+  showJobCode      Boolean  @default(true)
+  showExamSubject  Boolean  @default(true)
+  isDefault        Boolean  @default(false)
+  version          String   @default("v1")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  tickets          AdmissionTicket[]
+}
+
+model SystemSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Application {
   id            String            @id @default(cuid())
   examProjectId String
   userId        String
+  jobPositionId String?
+  jobCode       String?
+  subjectName   String?
+  jobSnapshot   Json?
   status        ApplicationStatus @default(DRAFT)
   major         String
   education     String
@@ -85,12 +188,15 @@ model Application {
   photoUrl      String?
   documents     Json?
   reviewNote    String?
+  materialRevision Int            @default(0)
+  locked        Boolean           @default(false)
   submittedAt   DateTime?
   approvedAt    DateTime?
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
   examProject   ExamProject       @relation(fields: [examProjectId], references: [id])
   user          User              @relation(fields: [userId], references: [id])
+  jobPosition   JobPosition?      @relation(fields: [jobPositionId], references: [id])
   orders        PaymentOrder[]
   ticket        AdmissionTicket?
   score         ScoreRecord?
@@ -105,6 +211,10 @@ model PaymentOrder {
   amount          Decimal         @db.Decimal(10, 2)
   provider        PaymentProvider
   status          PaymentStatus   @default(PENDING)
+  providerTradeNo String?
+  reconciliationStatus String?
+  lastQueriedAt   DateTime?
+  reconciledAt    DateTime?
   callbackPayload Json?
   createdAt       DateTime        @default(now())
   paidAt          DateTime?
@@ -116,12 +226,20 @@ model AdmissionTicket {
   applicationId   String      @unique
   ticketNo        String      @unique
   examTime        DateTime
+  areaName        String?
   venue           String
+  venueAddress    String?
   room            String
   seatNo          String
+  examSubject     String?
+  jobCode         String?
+  jobName         String?
+  templateId      String?
+  schedulingStatus String    @default("ASSIGNED")
   templateVersion String      @default("v1")
   printedAt       DateTime?
   application     Application @relation(fields: [applicationId], references: [id])
+  template        TicketTemplate? @relation(fields: [templateId], references: [id])
 }
 
 model ScoreRecord {
@@ -164,4 +282,36 @@ model AdminOperationLog {
   targetId    String
   detail      String
   createdAt   DateTime @default(now())
+}
+
+model LoginLog {
+  id        String    @id @default(cuid())
+  userId    String?
+  account   String
+  role      UserRole?
+  success   Boolean
+  ip        String?
+  userAgent String?
+  createdAt DateTime  @default(now())
+  user      User?     @relation(fields: [userId], references: [id])
+}
+
+model PaymentCallbackLog {
+  id        String          @id @default(cuid())
+  provider  PaymentProvider
+  orderNo   String
+  success   Boolean
+  message   String?
+  payload   Json?
+  createdAt DateTime        @default(now())
+}
+
+model TicketDownloadLog {
+  id          String   @id @default(cuid())
+  userId       String
+  applicationId String
+  ticketId     String
+  disposition  String
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id])
 }

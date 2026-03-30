@@ -30,6 +30,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "当前不在报名时间范围内" }, { status: 409 });
   }
 
+  const job = await repo.findJobPositionById(parsed.data.jobPositionId);
+  if (!job || job.examProjectId !== exam.id || !job.enabled) {
+    return NextResponse.json({ ok: false, error: "岗位不存在或已停用" }, { status: 404 });
+  }
+
   const existing = await repo.findApplicationByUserAndExam(access.current.user.id, parsed.data.examProjectId);
   if (existing) {
     if (!["DRAFT", "REJECTED"].includes(existing.status)) {
@@ -40,6 +45,15 @@ export async function POST(request: Request) {
     }
 
     const updated = await repo.updateApplication(existing.id, {
+      jobPositionId: job.id,
+      jobCode: parsed.data.jobCode,
+      subjectName: parsed.data.subjectName,
+      jobSnapshot: {
+        id: job.id,
+        code: job.code,
+        name: job.name,
+        subjectName: parsed.data.subjectName,
+      },
       major: parsed.data.major,
       education: parsed.data.education,
       employer: parsed.data.employer,
@@ -56,6 +70,12 @@ export async function POST(request: Request) {
   try {
     application = await repo.createApplication({
       ...parsed.data,
+      jobSnapshot: {
+        id: job.id,
+        code: job.code,
+        name: job.name,
+        subjectName: parsed.data.subjectName,
+      },
       userId: access.current.user.id,
     });
   } catch (error) {
@@ -80,6 +100,15 @@ export async function POST(request: Request) {
       }
 
       application = await repo.updateApplication(current.id, {
+        jobPositionId: job.id,
+        jobCode: parsed.data.jobCode,
+        subjectName: parsed.data.subjectName,
+        jobSnapshot: {
+          id: job.id,
+          code: job.code,
+          name: job.name,
+          subjectName: parsed.data.subjectName,
+        },
         major: parsed.data.major,
         education: parsed.data.education,
         employer: parsed.data.employer,

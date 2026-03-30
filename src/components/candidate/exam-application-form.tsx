@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ChangeEvent, FormEvent, useState } from "react";
-import type { Application } from "@/lib/types";
+import { ChangeEvent, FormEvent, useMemo, useState } from "react";
+import type { Application, JobPosition } from "@/lib/types";
 
 interface UploadedAsset {
   url: string;
@@ -12,15 +12,24 @@ interface UploadedAsset {
 export function ExamApplicationForm({
   examProjectId,
   admissionNotice,
+  jobs,
   initialApplication,
 }: {
   examProjectId: string;
   admissionNotice: string;
+  jobs: JobPosition[];
   initialApplication?: Application;
 }) {
   const router = useRouter();
+  const defaultJob =
+    jobs.find((item) => item.id === initialApplication?.jobPositionId) ??
+    jobs.find((item) => item.code === initialApplication?.jobCode) ??
+    jobs[0];
   const [form, setForm] = useState({
-    major: initialApplication?.major ?? "行政管理",
+    jobPositionId: initialApplication?.jobPositionId ?? defaultJob?.id ?? "",
+    major: initialApplication?.major ?? defaultJob?.name ?? "",
+    jobCode: initialApplication?.jobCode ?? defaultJob?.code ?? "",
+    subjectName: initialApplication?.subjectName ?? defaultJob?.examSubject ?? "",
     education: initialApplication?.education ?? "本科",
     employer: initialApplication?.employer ?? "青城人力服务有限公司",
     photoUrl: initialApplication?.photoUrl ?? "",
@@ -34,6 +43,22 @@ export function ExamApplicationForm({
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState<"draft" | "submit" | "">("");
   const [uploading, setUploading] = useState<"" | "photo" | "documents">("");
+
+  const selectedJob = useMemo(
+    () => jobs.find((item) => item.id === form.jobPositionId) ?? null,
+    [form.jobPositionId, jobs],
+  );
+
+  function handleJobChange(jobId: string) {
+    const job = jobs.find((item) => item.id === jobId);
+    setForm((current) => ({
+      ...current,
+      jobPositionId: jobId,
+      major: job?.name ?? current.major,
+      jobCode: job?.code ?? current.jobCode,
+      subjectName: job?.examSubject ?? current.subjectName,
+    }));
+  }
 
   async function uploadFile(file: File, kind: "photo" | "document") {
     const formData = new FormData();
@@ -130,7 +155,10 @@ export function ExamApplicationForm({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         examProjectId,
+        jobPositionId: form.jobPositionId,
         major: form.major,
+        jobCode: form.jobCode,
+        subjectName: form.subjectName,
         education: form.education,
         employer: form.employer,
         photoUrl: form.photoUrl || undefined,
@@ -184,9 +212,36 @@ export function ExamApplicationForm({
 
   return (
     <form className="form-grid" onSubmit={onSubmit}>
+      <div className="field-full">
+        <label>选择岗位</label>
+        <select value={form.jobPositionId} onChange={(e) => handleJobChange(e.target.value)}>
+          {jobs.length ? (
+            jobs.map((job) => (
+              <option key={job.id} value={job.id}>
+                {job.code} / {job.name} / {job.educationRequirement ?? "学历不限"}
+              </option>
+            ))
+          ) : (
+            <option value="">当前考试暂无可报名岗位</option>
+          )}
+        </select>
+        {selectedJob ? (
+          <small className="field-hint">
+            招录人数：{selectedJob.quota}，考试科目：{selectedJob.examSubject ?? form.subjectName ?? "待配置"}
+          </small>
+        ) : null}
+      </div>
       <div className="field">
-        <label>报考专业 / 岗位</label>
-        <input value={form.major} onChange={(e) => setForm((p) => ({ ...p, major: e.target.value }))} />
+        <label>岗位名称</label>
+        <input readOnly value={form.major} />
+      </div>
+      <div className="field">
+        <label>岗位代码</label>
+        <input readOnly value={form.jobCode} />
+      </div>
+      <div className="field">
+        <label>考试科目</label>
+        <input readOnly value={form.subjectName} />
       </div>
       <div className="field">
         <label>最高学历</label>
@@ -196,7 +251,7 @@ export function ExamApplicationForm({
           <option>博士研究生</option>
         </select>
       </div>
-      <div className="field">
+      <div className="field-full">
         <label>工作单位</label>
         <input value={form.employer} onChange={(e) => setForm((p) => ({ ...p, employer: e.target.value }))} />
       </div>
@@ -257,18 +312,19 @@ export function ExamApplicationForm({
       {initialApplication ? (
         <p className="muted">当前正在编辑已有报名记录：{initialApplication.id}</p>
       ) : null}
+      {!jobs.length ? <p style={{ color: "var(--accent)" }}>当前考试尚未配置岗位，暂不可提交报名。</p> : null}
       {error ? <p style={{ color: "var(--accent)" }}>{error}</p> : null}
       {success ? <p style={{ color: "var(--success)" }}>{success}</p> : null}
       <div className="actions-row">
         <button
           className="button-secondary"
           type="button"
-          disabled={!!loading || !!uploading}
+          disabled={!!loading || !!uploading || !jobs.length}
           onClick={() => void handleSave("draft")}
         >
           {loading === "draft" ? "保存中..." : "保存草稿"}
         </button>
-        <button className="button" type="submit" disabled={!!loading || !!uploading}>
+        <button className="button" type="submit" disabled={!!loading || !!uploading || !jobs.length}>
           {loading === "submit" ? "提交中..." : "提交审核"}
         </button>
       </div>

@@ -62,13 +62,13 @@ export function TicketPreviewSheet({
           </tr>
           <tr>
             <th>岗位代码</th>
-            <td>{ticket.ticketNo.slice(-8)}</td>
+            <td>{ticket.jobCode ?? application.jobCode ?? ticket.ticketNo.slice(-8)}</td>
             <th>笔试类别</th>
-            <td>{application.major}</td>
+            <td>{ticket.examSubject ?? application.subjectName ?? application.major}</td>
           </tr>
           <tr>
             <th>岗位名称</th>
-            <td colSpan={3}>{application.major}</td>
+            <td colSpan={3}>{ticket.jobName ?? application.major}</td>
           </tr>
         </tbody>
       </table>
@@ -90,7 +90,7 @@ export function TicketPreviewSheet({
           </tr>
           <tr>
             <td>{ticket.ticketNo}</td>
-            <td>{buildTicketSubjectName(application.major)}</td>
+            <td>{buildTicketSubjectName(ticket.examSubject ?? application.subjectName ?? "", application.major)}</td>
             <td>{renderMultiline(buildTicketArrivalTip(ticket.examTime))}</td>
             <td>{ticket.venue}</td>
             <td>{ticket.room}</td>

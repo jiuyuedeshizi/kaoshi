@@ -39,16 +39,25 @@ export async function GET(
     return NextResponse.json({ ok: false, error: "准考证打印时间未到" }, { status: 409 });
   }
 
+  const template = await repo.findDefaultTicketTemplate();
+
   const pdf = await generateTicketPdf({
     ticket,
     application,
     candidate,
     exam,
+    template,
   });
 
   const filename = `${candidate.name}-${ticket.ticketNo}-准考证.pdf`;
   const url = new URL(request.url);
   const disposition = url.searchParams.get("disposition") === "inline" ? "inline" : "attachment";
+  await repo.createTicketDownloadLog({
+    userId: candidate.id,
+    applicationId,
+    ticketId: ticket.id,
+    disposition: disposition === "inline" ? "INLINE" : "ATTACHMENT",
+  });
 
   return new NextResponse(new Uint8Array(pdf), {
     status: 200,

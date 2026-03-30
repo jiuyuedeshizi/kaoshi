@@ -22,10 +22,19 @@ interface AdminDashboardProps {
 
 const menuItems = [
   { href: "/admin/exams", label: "考试项目管理", roles: ["ADMIN"] },
+  { href: "/admin/jobs", label: "岗位管理", roles: ["ADMIN"] },
   { href: "/admin/applications", label: "报名审核", roles: ["ADMIN", "REVIEWER"] },
   { href: "/admin/orders", label: "订单管理", roles: ["ADMIN", "REVIEWER"] },
+  { href: "/admin/locations", label: "考区考点管理", roles: ["ADMIN", "SCHEDULER"] },
+  { href: "/admin/scheduling", label: "考场座位编排", roles: ["ADMIN", "SCHEDULER"] },
+  { href: "/admin/tickets", label: "准考证管理", roles: ["ADMIN", "SCHEDULER"] },
   { href: "/admin/scores", label: "成绩管理", roles: ["ADMIN"] },
   { href: "/admin/notices", label: "公告发布", roles: ["ADMIN"] },
+  { href: "/admin/users", label: "用户管理", roles: ["ADMIN"] },
+  { href: "/admin/reports", label: "统计报表", roles: ["ADMIN", "FINANCE", "SCORE_MANAGER"] },
+  { href: "/admin/logs", label: "日志审计", roles: ["ADMIN", "FINANCE"] },
+  { href: "/admin/settings", label: "系统设置", roles: ["ADMIN"] },
+  { href: "/admin/permissions", label: "权限管理", roles: ["ADMIN"] },
 ];
 
 export function AdminDashboard(props: AdminDashboardProps) {

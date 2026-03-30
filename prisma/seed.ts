@@ -1,12 +1,22 @@
 import { PrismaClient } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { hashPassword } from "../src/lib/password";
 import {
   adminOperationLogs,
   applications,
+  examAreas,
   examProjects,
+  examRooms,
+  examVenues,
+  jobPositions,
+  loginLogs,
   notices,
+  paymentCallbackLogs,
   paymentOrders,
   scores,
+  systemSettings,
+  ticketDownloadLogs,
+  ticketTemplates,
   tickets,
   users,
 } from "../src/lib/demo-data";
@@ -16,10 +26,19 @@ const prisma = new PrismaClient();
 async function main() {
   await prisma.adminOperationLog.deleteMany();
   await prisma.adminSession.deleteMany();
+  await prisma.ticketDownloadLog.deleteMany();
+  await prisma.paymentCallbackLog.deleteMany();
+  await prisma.loginLog.deleteMany();
   await prisma.scoreRecord.deleteMany();
   await prisma.admissionTicket.deleteMany();
   await prisma.paymentOrder.deleteMany();
   await prisma.application.deleteMany();
+  await prisma.jobPosition.deleteMany();
+  await prisma.examRoom.deleteMany();
+  await prisma.examVenue.deleteMany();
+  await prisma.examArea.deleteMany();
+  await prisma.ticketTemplate.deleteMany();
+  await prisma.systemSetting.deleteMany();
   await prisma.notice.deleteMany();
   await prisma.examProject.deleteMany();
   await prisma.user.deleteMany();
@@ -37,6 +56,8 @@ async function main() {
       email: user.email,
       address: user.address,
       emergencyContact: user.emergencyContact,
+      disabled: user.disabled ?? false,
+      blacklisted: user.blacklisted ?? false,
     })),
   });
 
@@ -56,7 +77,94 @@ async function main() {
       scoreReleaseAt: new Date(exam.scoreReleaseAt.replace(" ", "T")),
       fee: exam.fee,
       published: exam.published,
+      defaultSubject: exam.defaultSubject,
+      ticketTitle: exam.ticketTitle,
+      ticketSubtitle: exam.ticketSubtitle,
+      ticketTemplateVersion: exam.ticketTemplateVersion,
       admissionNotice: exam.admissionNotice,
+    })),
+  });
+
+  await prisma.jobPosition.createMany({
+    data: jobPositions.map((job) => ({
+      id: job.id,
+      examProjectId: job.examProjectId,
+      code: job.code,
+      name: job.name,
+      quota: job.quota,
+      organization: job.organization,
+      examSubject: job.examSubject,
+      majorRequirement: job.majorRequirement,
+      educationRequirement: job.educationRequirement,
+      degreeRequirement: job.degreeRequirement,
+      ageRequirement: job.ageRequirement,
+      genderRequirement: job.genderRequirement,
+      householdRequirement: job.householdRequirement,
+      experienceRequirement: job.experienceRequirement,
+      notes: job.notes,
+      enabled: job.enabled,
+      createdAt: new Date(job.createdAt.replace(" ", "T")),
+    })),
+  });
+
+  await prisma.examArea.createMany({
+    data: examAreas.map((area) => ({
+      id: area.id,
+      code: area.code,
+      name: area.name,
+      enabled: area.enabled,
+      createdAt: new Date(area.createdAt.replace(" ", "T")),
+    })),
+  });
+
+  await prisma.examVenue.createMany({
+    data: examVenues.map((venue) => ({
+      id: venue.id,
+      areaId: venue.areaId,
+      code: venue.code,
+      name: venue.name,
+      address: venue.address,
+      enabled: venue.enabled,
+      createdAt: new Date(venue.createdAt.replace(" ", "T")),
+    })),
+  });
+
+  await prisma.examRoom.createMany({
+    data: examRooms.map((room) => ({
+      id: room.id,
+      venueId: room.venueId,
+      name: room.name,
+      capacity: room.capacity,
+      enabled: room.enabled,
+      createdAt: new Date(room.createdAt.replace(" ", "T")),
+    })),
+  });
+
+  await prisma.ticketTemplate.createMany({
+    data: ticketTemplates.map((template) => ({
+      id: template.id,
+      name: template.name,
+      title: template.title,
+      subtitle: template.subtitle,
+      noticeItems: template.noticeItems,
+      showPhoto: template.showPhoto,
+      showEthnicity: template.showEthnicity,
+      showJobCode: template.showJobCode,
+      showExamSubject: template.showExamSubject,
+      isDefault: template.isDefault,
+      version: template.version,
+      createdAt: new Date(template.createdAt.replace(" ", "T")),
+      updatedAt: new Date(template.updatedAt.replace(" ", "T")),
+    })),
+  });
+
+  await prisma.systemSetting.createMany({
+    data: systemSettings.map((setting) => ({
+      id: setting.id,
+      key: setting.key,
+      value: setting.value as Prisma.InputJsonValue,
+      createdAt: new Date(setting.createdAt.replace(" ", "T")),
+      updatedAt: new Date(setting.updatedAt.replace(" ", "T")),
     })),
   });
 
@@ -77,6 +185,10 @@ async function main() {
       id: application.id,
       examProjectId: application.examProjectId,
       userId: application.userId,
+      jobPositionId: application.jobPositionId,
+      jobCode: application.jobCode,
+      subjectName: application.subjectName,
+      jobSnapshot: application.jobSnapshot,
       status: application.status,
       major: application.major,
       education: application.education,
@@ -84,6 +196,8 @@ async function main() {
       photoUrl: application.photoUrl,
       documents: application.documents,
       reviewNote: application.reviewNote,
+      materialRevision: application.materialRevision ?? 0,
+      locked: application.locked ?? false,
       submittedAt: application.submittedAt ? new Date(application.submittedAt.replace(" ", "T")) : null,
       approvedAt: application.approvedAt ? new Date(application.approvedAt.replace(" ", "T")) : null,
       createdAt: new Date(application.createdAt.replace(" ", "T")),
@@ -98,6 +212,10 @@ async function main() {
       amount: order.amount,
       provider: order.provider,
       status: order.status,
+      providerTradeNo: order.providerTradeNo,
+      reconciliationStatus: order.reconciliationStatus,
+      lastQueriedAt: order.lastQueriedAt ? new Date(order.lastQueriedAt.replace(" ", "T")) : null,
+      reconciledAt: order.reconciledAt ? new Date(order.reconciledAt.replace(" ", "T")) : null,
       callbackPayload: order.callbackPayload,
       createdAt: new Date(order.createdAt.replace(" ", "T")),
       paidAt: order.paidAt ? new Date(order.paidAt.replace(" ", "T")) : null,
@@ -110,9 +228,16 @@ async function main() {
       applicationId: ticket.applicationId,
       ticketNo: ticket.ticketNo,
       examTime: new Date(ticket.examTime.replace(" ", "T")),
+      areaName: ticket.areaName,
       venue: ticket.venue,
+      venueAddress: ticket.venueAddress,
       room: ticket.room,
       seatNo: ticket.seatNo,
+      examSubject: ticket.examSubject,
+      jobCode: ticket.jobCode,
+      jobName: ticket.jobName,
+      templateId: ticket.templateId,
+      schedulingStatus: ticket.schedulingStatus,
       templateVersion: ticket.templateVersion,
       printedAt: ticket.printedAt ? new Date(ticket.printedAt.replace(" ", "T")) : null,
     })),
@@ -141,6 +266,42 @@ async function main() {
       targetType: log.targetType,
       targetId: log.targetId,
       detail: log.detail,
+      createdAt: new Date(log.createdAt.replace(" ", "T")),
+    })),
+  });
+
+  await prisma.loginLog.createMany({
+    data: loginLogs.map((log) => ({
+      id: log.id,
+      userId: log.userId,
+      account: log.account,
+      role: log.role,
+      success: log.success,
+      ip: log.ip,
+      userAgent: log.userAgent,
+      createdAt: new Date(log.createdAt.replace(" ", "T")),
+    })),
+  });
+
+  await prisma.paymentCallbackLog.createMany({
+    data: paymentCallbackLogs.map((log) => ({
+      id: log.id,
+      provider: log.provider,
+      orderNo: log.orderNo,
+      success: log.success,
+      message: log.message,
+      payload: log.payload,
+      createdAt: new Date(log.createdAt.replace(" ", "T")),
+    })),
+  });
+
+  await prisma.ticketDownloadLog.createMany({
+    data: ticketDownloadLogs.map((log) => ({
+      id: log.id,
+      userId: log.userId,
+      applicationId: log.applicationId,
+      ticketId: log.ticketId,
+      disposition: log.disposition,
       createdAt: new Date(log.createdAt.replace(" ", "T")),
     })),
   });

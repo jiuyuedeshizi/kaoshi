@@ -19,6 +19,7 @@ export default async function ExamDetailPage({
   }
 
   const existingApplication = await repo.findApplicationByUserAndExam(current.user.id, exam.id);
+  const jobs = await repo.listJobPositionsByExam(exam.id);
 
   return (
     <SiteFrame currentPath="/exams">
@@ -34,6 +35,7 @@ export default async function ExamDetailPage({
           <ExamApplicationForm
             examProjectId={exam.id}
             admissionNotice={exam.admissionNotice}
+            jobs={jobs}
             initialApplication={existingApplication ?? undefined}
           />
         </section>
