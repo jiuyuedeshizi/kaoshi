@@ -32,6 +32,7 @@ func SetupRouter() *gin.Engine {
 		authGroup.Use(middleware.RateLimit())
 		{
 			authGroup.POST("/login", handler.Login)
+			authGroup.POST("/admin/login", handler.AdminLogin)
 			authGroup.POST("/sms/send", handler.SendSMSCode)
 			authGroup.POST("/sms/login", handler.SMSLogin)
 			authGroup.POST("/register", handler.Register)

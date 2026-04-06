@@ -114,9 +114,10 @@ type JobPosition struct {
 
 // User 考生用户
 type User struct {
-	ID               uint                   `gorm:"primaryKey" json:"id"`
-	ExamProjectID    uint                   `gorm:"index" json:"exam_project_id"`
+	ID               string                 `gorm:"primaryKey" json:"id"`
+	ExamProjectID    string                 `gorm:"index" json:"exam_project_id"`
 	ExamProject      ExamProject            `gorm:"foreignKey:ExamProjectID" json:"exam_project,omitempty"`
+	Role             UserRole               `gorm:"size:50;not null;default:'CANDIDATE'" json:"role"`
 	IDCard           string                 `gorm:"uniqueIndex;size:18;not null" json:"id_card"`
 	Phone            string                 `gorm:"uniqueIndex;size:11;not null" json:"phone"`
 	PasswordHash     string                 `gorm:"size:255;not null" json:"-"`
@@ -338,7 +339,7 @@ type ScoreSubject struct {
 
 // AdminUser 管理员用户
 type AdminUser struct {
-	ID           uint           `gorm:"primaryKey" json:"id"`
+	ID           string         `gorm:"primaryKey" json:"id"`
 	Username     string         `gorm:"uniqueIndex;size:50;not null" json:"username"`
 	PasswordHash string         `gorm:"size:255;not null" json:"-"`
 	Name         string         `gorm:"size:50;not null" json:"name"`

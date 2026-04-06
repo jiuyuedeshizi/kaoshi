@@ -1,30 +1,17 @@
-import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
+import bcrypt from "bcrypt";
 
-const KEY_LENGTH = 64;
-const PREFIX = "scrypt";
+const SALT_ROUNDS = 10;
 
-export function hashPassword(password: string) {
-  const salt = randomBytes(16).toString("hex");
-  const hash = scryptSync(password, salt, KEY_LENGTH).toString("hex");
-  return `${PREFIX}$${salt}$${hash}`;
+export function hashPassword(password: string): string {
+  return bcrypt.hashSync(password, SALT_ROUNDS);
 }
 
-export function verifyPassword(password: string, storedValue: string) {
-  if (!storedValue.startsWith(`${PREFIX}$`)) {
-    return password === storedValue;
+export function verifyPassword(password: string, storedValue: string): boolean {
+  // Handle bcrypt hash (starts with $2)
+  if (storedValue.startsWith("$2")) {
+    return bcrypt.compareSync(password, storedValue);
   }
 
-  const [, salt, originalHash] = storedValue.split("$");
-  if (!salt || !originalHash) {
-    return false;
-  }
-
-  const derived = scryptSync(password, salt, KEY_LENGTH);
-  const original = Buffer.from(originalHash, "hex");
-
-  if (derived.length !== original.length) {
-    return false;
-  }
-
-  return timingSafeEqual(derived, original);
+  // Legacy: plain text comparison (for development)
+  return password === storedValue;
 }

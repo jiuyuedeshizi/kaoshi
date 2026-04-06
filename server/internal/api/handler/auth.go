@@ -103,3 +103,32 @@ func SMSLogin(c *gin.Context) {
 	// 实现短信登录逻辑
 	response.Success(c, gin.H{"token": "", "user": nil})
 }
+
+type AdminLoginRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+func AdminLogin(c *gin.Context) {
+	var req AdminLoginRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "参数错误")
+		return
+	}
+
+	authService := service.NewAuthService()
+	token, admin, err := authService.AdminLogin(req.Username, req.Password)
+	if err != nil {
+		response.Unauthorized(c, err.Error())
+		return
+	}
+
+	response.Success(c, gin.H{
+		"token": token,
+		"user": gin.H{
+			"id":   admin.ID,
+			"name": admin.Name,
+			"role": admin.Role,
+		},
+	})
+}
