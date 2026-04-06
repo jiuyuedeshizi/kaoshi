@@ -170,8 +170,8 @@ type Application struct {
 	ReviewNote      string               `gorm:"type:text" json:"review_note"`
 	MaterialRevision int                 `gorm:"default:0" json:"material_revision"`
 	Locked          bool                 `gorm:"default:false" json:"locked"`
-	SubmittedAt     *time.Time           `json:"submitted_at"`
-	ApprovedAt      *time.Time           `json:"approved_at"`
+	SubmittedAt     time.Time            `json:"submitted_at"`
+	ApprovedAt      time.Time            `json:"approved_at"`
 	CreatedAt       time.Time            `json:"created_at"`
 	UpdatedAt       time.Time            `json:"updated_at"`
 
