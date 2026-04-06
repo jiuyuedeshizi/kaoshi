@@ -6,12 +6,14 @@ import type { DashboardMetric, ExamProject, Notice } from "@/lib/types";
 export function HomePage({
   notices,
   exams,
+  categories,
   metrics,
   faqItems,
   guideSteps,
 }: {
   notices: Notice[];
   exams: ExamProject[];
+  categories: Array<{ id: string; name: string; slug: string }>;
   metrics: DashboardMetric[];
   faqItems: Array<{ question: string; answer: string }>;
   guideSteps: string[];
@@ -98,6 +100,20 @@ export function HomePage({
             </div>
           </div>
         </section>
+
+        {/* 考试分类导航 */}
+        {categories.length > 0 && (
+          <section className="exam-categories">
+            <div className="category-tabs">
+              <Link href="/" className="active">全部</Link>
+              {categories.map((cat) => (
+                <Link key={cat.id} href={`/category/${cat.slug}`}>
+                  {cat.name}
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="page-section">
           <div className="section-title">

@@ -23,6 +23,26 @@ export default async function ExamDetailPage({
 
   return (
     <SiteFrame currentPath="/exams">
+      {/* 考试独立 Header */}
+      <div className="exam-header">
+        <div className="exam-header-content">
+          <img
+            src={exam.logoUrl || "/images/logo-default.png"}
+            alt=""
+            className="exam-logo"
+          />
+          <div className="exam-title-area">
+            <h1>{exam.title}</h1>
+            {exam.subtitle && <p className="exam-subtitle">{exam.subtitle}</p>}
+          </div>
+        </div>
+        {exam.contactPhone && (
+          <div className="exam-contact">
+            咨询电话：{exam.contactPhone}
+          </div>
+        )}
+      </div>
+
       <PageHero
         title={exam.title}
         description={`${exam.location} · ${exam.category}。请按要求填写报考信息、上传材料并提交资格审核。`}

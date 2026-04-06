@@ -49,9 +49,12 @@ export interface ExamProject {
   id: string;
   slug: string;
   title: string;
+  subtitle?: string;
   category: string;
   location: string;
   description: string;
+  logoUrl?: string;
+  contactPhone?: string;
   registrationStart: string;
   registrationEnd: string;
   reviewEnd: string;

@@ -65,9 +65,12 @@ model ExamProject {
   id                String       @id @default(cuid())
   slug              String       @unique
   title             String
+  subtitle          String?
   category          String
   location          String
   description       String
+  logoUrl           String?
+  contactPhone      String?
   registrationStart DateTime
   registrationEnd   DateTime
   reviewEnd         DateTime

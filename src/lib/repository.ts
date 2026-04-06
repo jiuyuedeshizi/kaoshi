@@ -94,9 +94,12 @@ function toExamProject(exam: {
   id: string;
   slug: string;
   title: string;
+  subtitle?: string | null;
   category: string;
   location: string;
   description: string;
+  logoUrl?: string | null;
+  contactPhone?: string | null;
   registrationStart: Date | string;
   registrationEnd: Date | string;
   reviewEnd: Date | string;
@@ -115,9 +118,12 @@ function toExamProject(exam: {
     id: exam.id,
     slug: exam.slug,
     title: exam.title,
+    subtitle: exam.subtitle ?? undefined,
     category: exam.category,
     location: exam.location,
     description: exam.description,
+    logoUrl: exam.logoUrl ?? undefined,
+    contactPhone: exam.contactPhone ?? undefined,
     registrationStart: formatDateTime(exam.registrationStart),
     registrationEnd: formatDateTime(exam.registrationEnd),
     reviewEnd: formatDateTime(exam.reviewEnd),
@@ -577,11 +583,77 @@ export const repo = {
     const row = await prisma.notice.create({ data: input });
     return toNotice(row);
   },
+  async updateNotice(id: string, input: Partial<Omit<Notice, "id" | "publishedAt">>) {
+    const prisma = getPrismaClient();
+    if (!prisma) {
+      const row = mockDb.updateNotice(id, input);
+      return row ? row : null;
+    }
+    const row = await prisma.notice.update({ where: { id }, data: input });
+    return toNotice(row);
+  },
+  async deleteNotice(id: string) {
+    const prisma = getPrismaClient();
+    if (!prisma) {
+      return mockDb.deleteNotice(id);
+    }
+    await prisma.notice.delete({ where: { id } });
+    return true;
+  },
   async listExamProjects() {
     const prisma = getPrismaClient();
     if (!prisma) return mockDb.listExamProjects();
     const rows = await prisma.examProject.findMany({ orderBy: { createdAt: "desc" } });
     return rows.map(toExamProject);
+  },
+  async listPublishedExams() {
+    const prisma = getPrismaClient();
+    if (!prisma) {
+      const now = new Date();
+      return mockDb.listExamProjects().filter(
+        (e) => e.published && new Date(e.registrationStart) <= now
+      );
+    }
+    const rows = await prisma.examProject.findMany({
+      where: {
+        published: true,
+        registrationStart: { lte: new Date() },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    return rows.map(toExamProject);
+  },
+  async listExamsByCategory(category: string) {
+    const prisma = getPrismaClient();
+    if (!prisma) {
+      const now = new Date();
+      return mockDb.listExamProjects().filter(
+        (e) => e.category === category && e.published && new Date(e.registrationStart) <= now
+      );
+    }
+    const rows = await prisma.examProject.findMany({
+      where: {
+        category,
+        published: true,
+        registrationStart: { lte: new Date() },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    return rows.map(toExamProject);
+  },
+  async listExamCategories(): Promise<Array<{ id: string; name: string; slug: string }>> {
+    const exams = await this.listPublishedExams();
+    const categoryMap = new Map<string, { id: string; name: string; slug: string }>();
+    for (const exam of exams) {
+      if (!categoryMap.has(exam.category)) {
+        categoryMap.set(exam.category, {
+          id: exam.category,
+          name: exam.category,
+          slug: exam.category.toLowerCase(),
+        });
+      }
+    }
+    return Array.from(categoryMap.values());
   },
   async findExamById(id: string) {
     const prisma = getPrismaClient();
@@ -612,6 +684,40 @@ export const repo = {
       },
     });
     return toExamProject(row);
+  },
+  async updateExamProject(id: string, input: Partial<Omit<ExamProject, "id">>) {
+    const prisma = getPrismaClient();
+    if (!prisma) {
+      const row = mockDb.updateExamProject(id, input);
+      return row ? row : null;
+    }
+
+    const data: Prisma.ExamProjectUpdateInput = {
+      ...input,
+    };
+    if (input.registrationStart) data.registrationStart = parseDate(input.registrationStart as string);
+    if (input.registrationEnd) data.registrationEnd = parseDate(input.registrationEnd as string);
+    if (input.reviewEnd) data.reviewEnd = parseDate(input.reviewEnd as string);
+    if (input.paymentEnd) data.paymentEnd = parseDate(input.paymentEnd as string);
+    if (input.ticketStart) data.ticketStart = parseDate(input.ticketStart as string);
+    if (input.scoreReleaseAt) data.scoreReleaseAt = parseDate(input.scoreReleaseAt as string);
+
+    const row = await prisma.examProject.update({ where: { id }, data });
+    return toExamProject(row);
+  },
+  async deleteExamProject(id: string) {
+    const prisma = getPrismaClient();
+    if (!prisma) {
+      return mockDb.deleteExamProject(id);
+    }
+    const hasApps = await prisma.application.count({ where: { examProjectId: id } });
+    if (hasApps > 0) {
+      throw new Error("EXAM_IN_USE");
+    }
+    // Delete associated jobs first in prisma due to FK
+    await prisma.jobPosition.deleteMany({ where: { examProjectId: id } });
+    await prisma.examProject.delete({ where: { id } });
+    return true;
   },
   async listJobPositions() {
     const prisma = getPrismaClient();
@@ -657,6 +763,27 @@ export const repo = {
       },
     });
     return toJobPosition(row);
+  },
+  async updateJobPosition(id: string, input: Partial<Omit<JobPosition, "id" | "createdAt" | "examProjectId">>) {
+    const prisma = getPrismaClient();
+    if (!prisma) {
+      const row = mockDb.updateJobPosition(id, input);
+      return row ? row : null;
+    }
+    const row = await prisma.jobPosition.update({ where: { id }, data: input });
+    return toJobPosition(row);
+  },
+  async deleteJobPosition(id: string) {
+    const prisma = getPrismaClient();
+    if (!prisma) {
+      return mockDb.deleteJobPosition(id);
+    }
+    const hasApps = await prisma.application.count({ where: { jobPositionId: id } });
+    if (hasApps > 0) {
+      throw new Error("JOB_IN_USE");
+    }
+    await prisma.jobPosition.delete({ where: { id } });
+    return true;
   },
   async listExamAreas() {
     const prisma = getPrismaClient();
@@ -744,6 +871,30 @@ export const repo = {
         address: input.address,
         emergencyContact: input.emergencyContact,
       },
+    });
+    return toUser(row);
+  },
+  async updateUserStatus(id: string, disabled: boolean, blacklisted: boolean) {
+    const prisma = getPrismaClient();
+    if (!prisma) {
+      const row = mockDb.updateUserStatus(id, disabled, blacklisted);
+      return row ? row : null;
+    }
+    const row = await prisma.user.update({
+      where: { id },
+      data: { disabled, blacklisted },
+    });
+    return toUser(row);
+  },
+  async resetUserPassword(id: string, newPasswordHash: string, plainTextForMock: string) {
+    const prisma = getPrismaClient();
+    if (!prisma) {
+      const row = mockDb.resetUserPassword(id, newPasswordHash, plainTextForMock);
+      return row ? row : null;
+    }
+    const row = await prisma.user.update({
+      where: { id },
+      data: { passwordHash: newPasswordHash },
     });
     return toUser(row);
   },
